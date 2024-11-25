@@ -1,0 +1,23 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "first try to debug zig",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/day1_trebuchet/zig-out/bin/day1_trebuchet",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}/day1_trebuchet",
+      "environment": [],
+      "MIMode": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    }
+  ]
+}
