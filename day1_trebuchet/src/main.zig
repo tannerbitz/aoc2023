@@ -42,6 +42,15 @@ fn to_i64(s: []const u8) i64 {
     return total;
 }
 
+fn first_and_last_number_chars(s: []const u8) i64 {
+    const numeric_chars = try extract_first_and_last_numbers(s);
+    var total: i64 = 0;
+    for (numeric_chars) |c| {
+        total = total * 10 + to_i64(c);
+    }
+    return total;
+}
+
 const ParseError = error{NumericNotFound};
 
 fn extract_first_and_last_numbers(input: []const u8) ParseError![2]u8 {
@@ -56,6 +65,82 @@ fn extract_first_and_last_numbers(input: []const u8) ParseError![2]u8 {
     }
 
     return .{ c1.?.*, c1.?.* };
+}
+
+fn extract_first_and_last_spelled_or_char_num(input: []const u8) ParseError![2]u8 {
+    const first_digit = first_number_char_or_spelled_number(input);
+    const last_digit = last_number_char_or_spelled_number(input);
+
+    if (first_digit == null) {
+        return ParseError.NumericNotFound;
+    }
+    if (last_digit == null) {
+        return ParseError.NumericNotFound;
+    }
+    return .{ first_digit.?, last_digit.? };
+}
+
+fn first_number_char_or_spelled_number(input: []const u8) ?u8 {
+    const spelled_numbers: [10][]const u8 = .{ "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine" };
+
+    const num_chars: [10][]const u8 = .{ "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+
+    var i_min: ?usize = null;
+    var num: u8 = undefined;
+    for (spelled_numbers, num_chars, 0..) |spelled_num, num_char, i| {
+        var maybe_idx = std.mem.indexOf(u8, input, spelled_num);
+        if (maybe_idx) |idx| {
+            if (i_min == null or idx < i_min.?) {
+                num = @truncate(i);
+                i_min = idx;
+            }
+        }
+
+        maybe_idx = std.mem.indexOf(u8, input, num_char);
+        if (maybe_idx) |idx| {
+            if (i_min == null or idx < i_min.?) {
+                num = @truncate(i);
+                i_min = idx;
+            }
+        }
+    }
+
+    if (i_min == null) {
+        return null;
+    } else {
+        return num;
+    }
+}
+
+fn last_number_char_or_spelled_number(input: []const u8) ?u8 {
+    const spelled_numbers: [10][]const u8 = .{ "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine" };
+    const num_chars: [10][]const u8 = .{ "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+
+    var i_max: ?usize = null;
+    var num: u8 = undefined;
+    for (spelled_numbers, num_chars, 0..) |spelled_num, num_char, i| {
+        var maybe_idx = std.mem.lastIndexOf(u8, input, spelled_num);
+        if (maybe_idx) |idx| {
+            if (i_max == null or idx > i_max.?) {
+                num = @truncate(i);
+                i_max = idx;
+            }
+        }
+
+        maybe_idx = std.mem.lastIndexOf(u8, input, num_char);
+        if (maybe_idx) |idx| {
+            if (i_max == null or idx > i_max.?) {
+                num = @truncate(i);
+                i_max = idx;
+            }
+        }
+    }
+
+    if (i_max == null) {
+        return null;
+    } else {
+        return num;
+    }
 }
 
 pub fn main() !void {
@@ -74,11 +159,30 @@ pub fn main() !void {
     var buf: [1024]u8 = undefined;
 
     var total: i64 = 0;
+    var total_with_spelled: i64 = 0;
     while (try in_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
         const num_chars = try extract_first_and_last_numbers(line);
         total += to_i64(&num_chars);
-        std.debug.print("{s} {d}\n", .{ line, total });
+
+        const nums = try extract_first_and_last_spelled_or_char_num(line);
+        total_with_spelled += @as(i64, nums[0] * 10 + nums[1]);
+
+        std.debug.print("{s} {d} {d}\n", .{ line, total, total_with_spelled });
     }
+}
+
+test "first spelled numbers or char num" {
+    const my_str = "hahahone2";
+    const maybe_val = first_number_char_or_spelled_number(my_str);
+    try std.testing.expect(maybe_val != null);
+    try std.testing.expectEqual(1, maybe_val);
+}
+
+test "last spelled numbers or char num" {
+    const my_str = "hahahone2";
+    const maybe_val = last_number_char_or_spelled_number(my_str);
+    try std.testing.expect(maybe_val != null);
+    try std.testing.expectEqual(2, maybe_val);
 }
 
 test "numeric str to i64" {
