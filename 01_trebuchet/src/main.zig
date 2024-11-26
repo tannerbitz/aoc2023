@@ -144,12 +144,6 @@ fn last_number_char_or_spelled_number(input: []const u8) ?u8 {
 }
 
 pub fn main() !void {
-    const my_str = "haha1kk";
-    const first_number_it = find_first_of(my_str, is_numeric);
-    try std.testing.expect(first_number_it != null);
-    const ptr_to_one: *const u8 = &my_str[4];
-    try std.testing.expectEqual(first_number_it.?, ptr_to_one);
-
     var file = try std.fs.cwd().openFile("input.txt", .{});
     defer file.close();
 
