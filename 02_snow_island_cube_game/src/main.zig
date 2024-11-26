@@ -1,19 +1,17 @@
 const std = @import("std");
 
 pub fn main() !void {
-    // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
-    std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
+    var file = try std.fs.cwd().openFile("input.txt", .{});
+    defer file.close();
 
-    // stdout is for the actual output of your application, for example if you
-    // are implementing gzip, then only the compressed bytes should be sent to
-    // stdout, not any debugging messages.
-    const stdout_file = std.io.getStdOut().writer();
-    var bw = std.io.bufferedWriter(stdout_file);
-    const stdout = bw.writer();
+    var buf_reader = std.io.bufferedReader(file.reader());
+    var in_stream = buf_reader.reader();
 
-    try stdout.print("Run `zig build test` to run the tests.\n", .{});
+    var buf: [1024]u8 = undefined;
 
-    try bw.flush(); // don't forget to flush!
+    while (try in_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
+        std.debug.print("{s}\n", .{line});
+    }
 }
 
 test "simple test" {
