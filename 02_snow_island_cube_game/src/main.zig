@@ -84,6 +84,31 @@ fn gameIsPossible(game: *const Game, bag: *const Draw) bool {
     return true;
 }
 
+fn getSmallestPossibleBagForGame(game: *const Game) Draw {
+    var bag = Draw{
+        .red = 0,
+        .green = 0,
+        .blue = 0,
+    };
+
+    for (game.draws.items) |*draw| {
+        if (draw.red > bag.red) {
+            bag.red = draw.red;
+        }
+        if (draw.blue > bag.blue) {
+            bag.blue = draw.blue;
+        }
+        if (draw.green > bag.green) {
+            bag.green = draw.green;
+        }
+    }
+    return bag;
+}
+
+fn getPower(bag: *const Draw) usize {
+    return bag.red * bag.green * bag.blue;
+}
+
 pub fn main() !void {
     var file = try std.fs.cwd().openFile("input.txt", .{});
     defer file.close();
@@ -103,6 +128,7 @@ pub fn main() !void {
     };
 
     var sum_possible_game_ids: usize = 0;
+    var sum_of_power: usize = 0;
     while (try in_stream.readUntilDelimiterOrEof(&buf, '\n')) |line| {
         const game = try parseGame(line, allocator);
         defer game.deinit();
@@ -110,9 +136,12 @@ pub fn main() !void {
         if (gameIsPossible(&game, &bag)) {
             sum_possible_game_ids += game.id;
         }
+        const smallest_bag = getSmallestPossibleBagForGame(&game);
+        sum_of_power += getPower(&smallest_bag);
     }
 
     std.debug.print("Sum of possible game id's: {d}\n", .{sum_possible_game_ids});
+    std.debug.print("Sum of all smallest bag's power: {d}\n", .{sum_of_power});
 }
 
 test "simple test" {
